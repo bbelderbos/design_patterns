@@ -1,5 +1,4 @@
 import pytest
-from tempfile import NamedTemporaryFile
 
 from repository import Item, SQLModelRepository, CsvRepository, IRepository
 
@@ -10,9 +9,9 @@ def repo_sql():
 
 
 @pytest.fixture
-def repo_csv():
-    with NamedTemporaryFile(delete=False) as temp_file:
-        return CsvRepository(file_path=temp_file.name)
+def repo_csv(tmp_path):
+    csv_file = tmp_path / "test.csv"
+    return CsvRepository(file_path=csv_file)
 
 
 def test_add_and_get_sqlmodel(repo_sql):
@@ -51,12 +50,14 @@ def test_add_two_items_csv(repo_csv):
     assert fetched_item2.name == "Test Item 2"
 
 
-def test_get_non_existing_sqlmodel(repo_sql):
+def test_get_non_existing_item_sqlmodel(repo_sql):
     fetched_item = repo_sql.get("Non Existing Item")
     assert fetched_item is None
 
 
-def test_get_non_existing_csv(repo_csv):
+def test_get_non_existing_item_csv(repo_csv):
+    # need to add an item for the csv file to spring into existence
+    repo_csv.add(Item(id=1, name="Test Item"))
     fetched_item = repo_csv.get("Non Existing Item")
     assert fetched_item is None
 
